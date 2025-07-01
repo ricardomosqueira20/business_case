@@ -75,50 +75,80 @@ def mostrar_modulo_leads_diarios(df):
 # MÓDULO 2: CPA y ROI por Canal + Producto
 # -------------------------
 
-def graficar_metrica_canal_producto(df, columna_metric, nombre_metric):
+import plotly.graph_objects as go
+
+def graficar_metrica_canal_producto(df, columna_metric, nombre_metric, objetivo, key_suffix):
     st.subheader(f"📈 {nombre_metric} diario por Canal + Producto")
 
     df['Canal_Producto'] = df['Canal'] + " | " + df['Producto']
     df['Fecha'] = pd.to_datetime(df['Fecha'])
 
+    # Filtro por producto con clave única para evitar conflicto de widgets
     opciones = sorted(df['Producto'].unique())
     productos_seleccionados = st.multiselect(
-    f"Selecciona productos a mostrar para {nombre_metric}",
-    opciones,
-    default=opciones,
-    key=f"select_{nombre_metric}"
-)
+        "Selecciona productos a mostrar",
+        opciones,
+        default=opciones,
+        key=f"{columna_metric}_{key_suffix}"
+    )
+
     df_filtrado = df[df['Producto'].isin(productos_seleccionados)]
 
+    # Promedio por Canal + Producto
     df_cat = df_filtrado.groupby(['Fecha', 'Canal_Producto'])[columna_metric].mean().reset_index()
 
+    # Promedio general
     df_gen = df_filtrado.groupby('Fecha')[columna_metric].mean().reset_index()
     df_gen.rename(columns={columna_metric: "Promedio General"}, inplace=True)
 
-    fig = px.bar(
-        df_cat,
-        x="Fecha",
-        y=columna_metric,
-        color="Canal_Producto",
-        barmode="group",
-        labels={columna_metric: nombre_metric},
-        title=f"{nombre_metric} diario por Canal + Producto vs Promedio General"
-    )
+    # Inicializar figura
+    fig = go.Figure()
 
-    fig.add_scatter(
+    # Barras: promedio general diario
+    fig.add_trace(go.Bar(
         x=df_gen["Fecha"],
         y=df_gen["Promedio General"],
-        mode="lines",
         name="Promedio General",
-        line=dict(color="black", dash="dash")
+        marker_color="lightgray",
+        opacity=0.6
+    ))
+
+    # Líneas: Canal + Producto
+    for cp in df_cat["Canal_Producto"].unique():
+        df_cp = df_cat[df_cat["Canal_Producto"] == cp]
+        fig.add_trace(go.Scatter(
+            x=df_cp["Fecha"],
+            y=df_cp[columna_metric],
+            mode="lines+markers",
+            name=cp
+        ))
+
+    # Línea horizontal de objetivo
+    fig.add_trace(go.Scatter(
+        x=df_gen["Fecha"],
+        y=[objetivo] * len(df_gen),
+        mode="lines",
+        name=f"Objetivo {nombre_metric}",
+        line=dict(color="red", dash="dash")
+    ))
+
+    fig.update_layout(
+        title=f"{nombre_metric} diario por Canal + Producto",
+        xaxis_title="Fecha",
+        yaxis_title=nombre_metric,
+        barmode="overlay",
+        template="plotly_white",
+        height=450
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
 def mostrar_modulo_cpa_roi(df):
-    st.header("📊 CPA y ROI diario por Canal + Producto")
-    graficar_metrica_canal_producto(df, 'CPA', 'CPA')
-    graficar_metrica_canal_producto(df, 'ROI', 'ROI')
+    st.header("📊 CPA, ROI y CTR diario por Canal + Producto")
+    graficar_metrica_canal_producto(df, 'CPA', 'CPA', objetivo=120, key_suffix="cpa")
+    graficar_metrica_canal_producto(df, 'ROI', 'ROI', objetivo=1.5, key_suffix="roi")
+    graficar_metrica_canal_producto(df, 'CTR', 'CTR', objetivo=0.12, key_suffix="ctr")
+
 
 # -------------------------
 # APP STREAMLIT

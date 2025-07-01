@@ -136,12 +136,11 @@ def main():
     try:
         df = cargar_datos()
         mostrar_modulo_leads_diarios(df)
+        mostrar_modulo_cpa_roi(df)  # 👈 ESTA LÍNEA FALTABA
     except Exception as e:
         st.error("❌ Error al cargar los datos. Verifica los nombres del archivo/hoja o los permisos del service account.")
         st.exception(e)
 
-if __name__ == "__main__":
-    main()
 
 
 

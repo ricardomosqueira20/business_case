@@ -1,5 +1,3 @@
-Asi debería de quedar todo el script?
-
 # ops_app.py
 
 import streamlit as st

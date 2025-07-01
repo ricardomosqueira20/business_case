@@ -58,6 +58,15 @@ def mostrar_modulo_leads_diarios(df):
     # Filtro por mes
     df_mes = df[df['Mes'] == mes_seleccionado]
 
+    # KPIs acumulados del mes
+    total_exitosos = df_mes[df_mes['lead_status'] == 'Exitoso']['Leads_Obtenidos'].sum()
+    total_rechazados = df_mes[df_mes['lead_status'] == 'Rechazado']['Leads_Obtenidos'].sum()
+
+    col1, col2 = st.columns(2)
+    col1.metric("✅ Leads exitosos acumulados", f"{total_exitosos:,}")
+    col2.metric("❌ Leads rechazados acumulados", f"{total_rechazados:,}")
+
+
     # Agrupación diaria
     leads_diarios = df_mes.groupby(['Fecha', 'lead_status'])['Leads_Obtenidos'].sum().reset_index()
 

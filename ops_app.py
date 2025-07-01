@@ -82,12 +82,55 @@ def mostrar_modulo_leads_diarios(df):
     st.plotly_chart(fig)
 
 # -------------------------
+# MÓDULO 2: CPA y ROI por Canal + Producto
+# -------------------------
+
+def graficar_metrica_canal_producto(df, columna_metric, nombre_metric):
+    st.subheader(f"📈 {nombre_metric} diario por Canal + Producto")
+
+    # Crear columna combinada
+    df['Canal_Producto'] = df['Canal'] + " | " + df['Producto']
+    df['Fecha'] = pd.to_datetime(df['Fecha'])
+
+    # Filtro por producto
+    opciones = sorted(df['Producto'].unique())
+    productos_seleccionados = st.multiselect("Selecciona productos a mostrar", opciones, default=opciones)
+
+    df_filtrado = df[df['Producto'].isin(productos_seleccionados)]
+
+    # Promedio por Canal + Producto
+    df_cat = df_filtrado.groupby(['Fecha', 'Canal_Producto'])[columna_metric].mean().reset_index()
+
+    # Promedio general
+    df_gen = df_filtrado.groupby('Fecha')[columna_metric].mean().reset_index()
+    df_gen['Canal_Producto'] = "Promedio General"
+
+    df_plot = pd.concat([df_cat, df_gen], ignore_index=True)
+
+    # Gráfica
+    fig = px.line(
+        df_plot,
+        x='Fecha',
+        y=columna_metric,
+        color='Canal_Producto',
+        title=f"{nombre_metric} diario por Canal + Producto",
+        labels={columna_metric: nombre_metric}
+    )
+
+    st.plotly_chart(fig)
+
+def mostrar_modulo_cpa_roi(df):
+    st.header("📊 CPA y ROI diario por Canal + Producto")
+    graficar_metrica_canal_producto(df, 'CPA', 'CPA')
+    graficar_metrica_canal_producto(df, 'ROI', 'ROI')
+
+# -------------------------
 # APP STREAMLIT
 # -------------------------
 
 def main():
     st.set_page_config(page_title="Rocket Dashboard", layout="wide")
-    st.title("🚀 Dashboard de Leads | Business Case Rocket")
+    st.title("🚀 Ops performance | Business Case")
 
     # Carga de datos
     try:

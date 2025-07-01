@@ -99,57 +99,56 @@ def graficar_metrica_canal_producto(df, columna_metric, nombre_metric, objetivo=
 
     # Promedio por Canal + Producto
     df_cat = df_filtrado.groupby(['Fecha', 'Canal_Producto'])[columna_metric].mean().reset_index()
-    df_cat['Tipo'] = "Canal + Producto"
 
     # Promedio general
     df_gen = df_filtrado.groupby('Fecha')[columna_metric].mean().reset_index()
     df_gen['Canal_Producto'] = "Promedio General"
-    df_gen['Tipo'] = "Promedio General"
 
     # Objetivo
     if objetivo is not None:
         df_obj = df_gen[['Fecha']].copy()
         df_obj[columna_metric] = objetivo
         df_obj['Canal_Producto'] = f"Objetivo ({objetivo})"
-        df_obj['Tipo'] = "Objetivo"
-        df_plot = pd.concat([df_cat, df_gen, df_obj], ignore_index=True)
     else:
-        df_plot = pd.concat([df_cat, df_gen], ignore_index=True)
+        df_obj = pd.DataFrame()
 
-    # Gráfico combinado
-    fig = px.bar(
-        df_plot[df_plot['Tipo'] == 'Promedio General'],
-        x="Fecha",
-        y=columna_metric,
-        color="Canal_Producto",
-        barmode="group",
+    # Crear figura
+    fig = go.Figure()
+
+    # Barras del promedio general
+    fig.add_trace(go.Bar(
+        x=df_gen['Fecha'],
+        y=df_gen[columna_metric],
+        name="Promedio General",
+        marker_color='blue',
         opacity=0.6
-    )
+    ))
 
-    # Añadir barra de objetivo
-    if objetivo is not None:
-        fig.add_bar(
+    # Barras del objetivo
+    if not df_obj.empty:
+        fig.add_trace(go.Bar(
             x=df_obj['Fecha'],
             y=df_obj[columna_metric],
             name=f"Objetivo ({objetivo})",
             marker_color='red',
-            opacity=0.5
-        )
+            opacity=0.4
+        ))
 
-    # Añadir líneas para Canal + Producto
-    for canal_prod in df_plot[df_plot['Tipo'] == 'Canal + Producto']['Canal_Producto'].unique():
-        subset = df_plot[(df_plot['Tipo'] == 'Canal + Producto') & (df_plot['Canal_Producto'] == canal_prod)]
-        fig.add_scatter(
+    # Líneas para cada canal-producto
+    for canal_prod in df_cat['Canal_Producto'].unique():
+        subset = df_cat[df_cat['Canal_Producto'] == canal_prod]
+        fig.add_trace(go.Scatter(
             x=subset['Fecha'],
             y=subset[columna_metric],
             mode='lines+markers',
             name=canal_prod
-        )
+        ))
 
     fig.update_layout(
         title=f"{nombre_metric} diario por Canal + Producto vs Promedio General",
         xaxis_title="Fecha",
-        yaxis_title=nombre_metric
+        yaxis_title=nombre_metric,
+        barmode='group'
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -160,8 +159,6 @@ def mostrar_modulo_cpa_roi(df):
     graficar_metrica_canal_producto(df, 'CPA', 'CPA', objetivo=120)
     graficar_metrica_canal_producto(df, 'ROI', 'ROI', objetivo=1.5)
     graficar_metrica_canal_producto(df, 'CTR', 'CTR', objetivo=0.05)
-
-
 
 # -------------------------
 # APP STREAMLIT

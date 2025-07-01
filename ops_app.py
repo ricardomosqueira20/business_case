@@ -1,38 +1,31 @@
-# app.py
+# ops_app.py
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import json
 
 # -------------------------
-# CARGA DE DATOS DESDE GOOGLE SHEETS
+# CARGA DE DATOS DESDE GOOGLE SHEETS (usando st.secrets["gcp"])
 # -------------------------
 
-@st.cache_data
+@st.cache_data(ttl=0)
 def cargar_datos():
-    import json
-
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
-    # Leer el JSON desde secrets
-    creds_dict = json.loads(st.secrets["GOOGLE_SHEETS_CREDS"])
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    scope = ["https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/drive.readonly"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp"], scope)
     client = gspread.authorize(creds)
 
-
     # Abrir el archivo y hoja de Google Sheets
-    spreadsheet = client.open("PRUEBA DATA OPS -  Analysis")
-    sheet = spreadsheet.worksheet("PRUEBA DATA OPS")
+    spreadsheet = client.open("PRUEBA DATA OPS -  Analysis")  # nombre exacto del archivo
+    sheet = spreadsheet.worksheet("PRUEBA DATA OPS")          # nombre exacto de la hoja
     data = sheet.get_all_records()
 
     # Convertir a DataFrame
     df = pd.DataFrame(data)
-
-    # Parseo de fecha
     df['Fecha'] = pd.to_datetime(df['Fecha'], format="%d/%m/%Y")
-    
+
     return df
 
 # -------------------------
@@ -86,13 +79,17 @@ def mostrar_modulo_leads_diarios(df):
 def main():
     st.set_page_config(page_title="Rocket Dashboard", layout="wide")
     st.title("🚀 Dashboard de Leads | Business Case Rocket")
-    
-    df = cargar_datos()
 
-    # Módulo 1: Leads diarios
-    mostrar_modulo_leads_diarios(df)
+    # Carga de datos
+    try:
+        df = cargar_datos()
+        mostrar_modulo_leads_diarios(df)
+    except Exception as e:
+        st.error("❌ Error al cargar los datos. Verifica los nombres del archivo/hoja o los permisos del service account.")
+        st.exception(e)
 
 if __name__ == "__main__":
     main()
+
 
 

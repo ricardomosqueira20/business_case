@@ -82,8 +82,12 @@ def graficar_metrica_canal_producto(df, columna_metric, nombre_metric):
     df['Fecha'] = pd.to_datetime(df['Fecha'])
 
     opciones = sorted(df['Producto'].unique())
-    productos_seleccionados = st.multiselect("Selecciona productos a mostrar", opciones, default=opciones)
-
+    productos_seleccionados = st.multiselect(
+    f"Selecciona productos a mostrar para {nombre_metric}",
+    opciones,
+    default=opciones,
+    key=f"select_{nombre_metric}"
+)
     df_filtrado = df[df['Producto'].isin(productos_seleccionados)]
 
     df_cat = df_filtrado.groupby(['Fecha', 'Canal_Producto'])[columna_metric].mean().reset_index()

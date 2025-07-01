@@ -12,15 +12,15 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 @st.cache_data
 def cargar_datos():
-    # Ruta local al archivo de credenciales JSON
-    ruta_json = "/Users/ricardomosqueira/airbnb_dashboard/sheets-api-calendar-0046b74b266e.json"
-    
-    # Scopes para acceso a Sheets y Drive
+    import json
+
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    
-    # Autenticación con gspread
-    creds = ServiceAccountCredentials.from_json_keyfile_name(ruta_json, scope)
+
+    # Leer el JSON desde secrets
+    creds_dict = json.loads(st.secrets["GOOGLE_SHEETS_CREDS"])
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     client = gspread.authorize(creds)
+
 
     # Abrir el archivo y hoja de Google Sheets
     spreadsheet = client.open("PRUEBA DATA OPS -  Analysis")

@@ -103,26 +103,29 @@ def graficar_metrica_canal_producto(df, columna_metric, nombre_metric):
 
     # Promedio general
     df_gen = df_filtrado.groupby('Fecha')[columna_metric].mean().reset_index()
-    df_gen['Canal_Producto'] = "Promedio General"
+    df_gen.rename(columns={columna_metric: "Promedio General"}, inplace=True)
 
-    df_plot = pd.concat([df_cat, df_gen], ignore_index=True)
-
-    # Gráfica
-    fig = px.line(
-        df_plot,
-        x='Fecha',
+    # Merge para graficar
+    fig = px.bar(
+        df_cat,
+        x="Fecha",
         y=columna_metric,
-        color='Canal_Producto',
-        title=f"{nombre_metric} diario por Canal + Producto",
-        labels={columna_metric: nombre_metric}
+        color="Canal_Producto",
+        barmode="group",
+        labels={columna_metric: nombre_metric},
+        title=f"{nombre_metric} diario por Canal + Producto vs Promedio General"
     )
 
-    st.plotly_chart(fig)
+    # Agregar línea de promedio general
+    fig.add_scatter(
+        x=df_gen["Fecha"],
+        y=df_gen["Promedio General"],
+        mode="lines",
+        name="Promedio General",
+        line=dict(color="black", dash="dash")
+    )
 
-def mostrar_modulo_cpa_roi(df):
-    st.header("📊 CPA y ROI diario por Canal + Producto")
-    graficar_metrica_canal_producto(df, 'CPA', 'CPA')
-    graficar_metrica_canal_producto(df, 'ROI', 'ROI')
+    st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------
 # APP STREAMLIT

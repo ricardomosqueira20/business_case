@@ -160,6 +160,56 @@ def mostrar_modulo_cpa_roi(df):
     graficar_metrica_canal_producto(df, 'ROI', 'ROI', objetivo=1.5)
     graficar_metrica_canal_producto(df, 'CTR', 'CTR', objetivo=0.05)
 
+###Modulo 3
+
+def mostrar_modulo_rolling_cpa_roi_por_canal(df):
+    st.header("📊 Tendencia Rolling 7D - CPA y ROI por Canal")
+
+    df['Fecha'] = pd.to_datetime(df['Fecha'])
+
+    # Filtro de canal
+    canales = sorted(df['Canal'].unique())
+    canales_seleccionados = st.multiselect(
+        "Selecciona canales a mostrar (Rolling 7D)", canales, default=canales, key="rolling_canal_selector"
+    )
+    df = df[df['Canal'].isin(canales_seleccionados)]
+
+    # Agrupación diaria por Canal
+    df_grouped = df.groupby(['Fecha', 'Canal'])[['CPA', 'ROI']].mean().reset_index()
+    df_grouped = df_grouped.sort_values(['Canal', 'Fecha'])
+
+    # Rolling 7D
+    df_grouped['CPA_rolling_7D'] = df_grouped.groupby('Canal')['CPA'].transform(
+        lambda x: x.rolling(window=7, min_periods=1).mean()
+    )
+    df_grouped['ROI_rolling_7D'] = df_grouped.groupby('Canal')['ROI'].transform(
+        lambda x: x.rolling(window=7, min_periods=1).mean()
+    )
+
+    # CPA Rolling
+    fig_cpa = px.line(
+        df_grouped,
+        x="Fecha",
+        y="CPA_rolling_7D",
+        color="Canal",
+        title="CPA Rolling 7D por Canal",
+        labels={"CPA_rolling_7D": "CPA (7D Promedio)"}
+    )
+    fig_cpa.add_hline(y=120, line_dash="dash", line_color="red", annotation_text="Objetivo CPA: 120", annotation_position="top left")
+    st.plotly_chart(fig_cpa, use_container_width=True)
+
+    # ROI Rolling
+    fig_roi = px.line(
+        df_grouped,
+        x="Fecha",
+        y="ROI_rolling_7D",
+        color="Canal",
+        title="ROI Rolling 7D por Canal",
+        labels={"ROI_rolling_7D": "ROI (7D Promedio)"}
+    )
+    fig_roi.add_hline(y=1.5, line_dash="dash", line_color="green", annotation_text="Objetivo ROI: 1.5", annotation_position="top left")
+    st.plotly_chart(fig_roi, use_container_width=True)
+
 # -------------------------
 # APP STREAMLIT
 # -------------------------

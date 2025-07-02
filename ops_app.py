@@ -38,6 +38,49 @@ def clasificar_lead(row):
         return "Rechazado"
 
 # -------------------------
+# MÓDULO 0: ALERTAS POR CANAL
+# -------------------------
+
+def mostrar_alertas_por_canal(df):
+    st.header("🚨 Alertas de desempeño por Canal (promedio del periodo)")
+
+    objetivos = {
+        'CPA': 120,     # valor objetivo máximo
+        'ROI': 1.5,     # valor objetivo mínimo
+        'CTR': 0.05     # valor objetivo mínimo
+    }
+
+    # Agrupar por canal
+    resumen = df.groupby('Canal')[['CPA', 'ROI', 'CTR']].mean().reset_index()
+
+    # Clasificación con semáforo
+    def clasificar(valor, metrica):
+        if metrica == 'CPA':
+            return '🟢' if valor <= objetivos['CPA'] else '🔴'
+        else:  # ROI y CTR
+            return '🟢' if valor >= objetivos[metrica] else '🔴'
+
+    resumen['CPA_Alerta'] = resumen['CPA'].apply(lambda x: clasificar(x, 'CPA'))
+    resumen['ROI_Alerta'] = resumen['ROI'].apply(lambda x: clasificar(x, 'ROI'))
+    resumen['CTR_Alerta'] = resumen['CTR'].apply(lambda x: clasificar(x, 'CTR'))
+
+    # Reordenar columnas
+    resumen = resumen[['Canal', 'CPA', 'CPA_Alerta', 'ROI', 'ROI_Alerta', 'CTR', 'CTR_Alerta']]
+
+    # Renombrar
+    resumen.columns = [
+        "Canal", "CPA Promedio", "Alerta CPA",
+        "ROI Promedio", "Alerta ROI",
+        "CTR Promedio", "Alerta CTR"
+    ]
+
+    st.dataframe(resumen.style.format({
+        "CPA Promedio": "{:,.2f}",
+        "ROI Promedio": "{:,.2f}",
+        "CTR Promedio": "{:.2%}"
+    }))
+
+# -------------------------
 # MÓDULO 1: LEADS DIARIOS POR ESTATUS
 # -------------------------
 

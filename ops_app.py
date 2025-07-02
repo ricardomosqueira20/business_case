@@ -107,7 +107,7 @@ def mostrar_modulo_leads_diarios(df):
 
     col1, col2, col3 = st.columns(3)
     col1.metric("✅ Leads exitosos acumulados", f"{total_exitosos:,}")
-    col2.metric("💰 Ingresos acumulados", f"${ingresos:,.0f} MXN")
+    col2.metric("💰 Ingresos acumulados (Suponiendo 250 mxn por lead exitoso)", f"${ingresos:,.0f} MXN")
     col3.metric("📉 Costos acumulados", f"${costos:,.0f} MXN")
 
     st.metric("📈 Utilidad operativa acumulada", f"${utilidad_operativa:,.0f} MXN")
@@ -124,7 +124,7 @@ def mostrar_modulo_leads_diarios(df):
         labels={'Leads_Obtenidos': 'Total de Leads', 'lead_status': 'Estatus del Lead'}
     )
     st.plotly_chart(fig)
-    
+
 # -------------------------
 # MÓDULO 2: CPA y ROI por Canal + Producto
 # -------------------------

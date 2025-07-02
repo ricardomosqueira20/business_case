@@ -263,8 +263,8 @@ def main():
 
     try:
         df = cargar_datos()
-        mostrar_alertas_por_canal(df)
         mostrar_modulo_leads_diarios(df)
+        mostrar_alertas_por_canal(df)
         mostrar_modulo_cpa_roi(df)
         mostrar_modulo_rolling_cpa_roi_por_canal(df)
     except Exception as e:

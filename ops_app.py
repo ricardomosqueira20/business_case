@@ -222,6 +222,7 @@ def main():
         df = cargar_datos()
         mostrar_modulo_leads_diarios(df)
         mostrar_modulo_cpa_roi(df)
+        mostrar_modulo_rolling_cpa_roi_por_canal(df)
     except Exception as e:
         st.error("❌ Error al cargar los datos. Verifica los nombres del archivo/hoja o los permisos del service account.")
         st.exception(e)

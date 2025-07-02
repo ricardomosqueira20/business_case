@@ -95,13 +95,24 @@ def mostrar_modulo_leads_diarios(df):
 
     df_mes = df[df['Mes'] == mes_seleccionado]
 
+    # Métricas de leads
     total_exitosos = df_mes[df_mes['lead_status'] == 'Exitoso']['Leads_Obtenidos'].sum()
     total_rechazados = df_mes[df_mes['lead_status'] == 'Rechazado']['Leads_Obtenidos'].sum()
 
-    col1, col2 = st.columns(2)
-    col1.metric("✅ Leads exitosos acumulados", f"{total_exitosos:,}")
-    col2.metric("❌ Leads rechazados acumulados", f"{total_rechazados:,}")
+    # Métricas financieras
+    ingreso_prom_lead = 250
+    ingresos = total_exitosos * ingreso_prom_lead
+    costos = df_mes['Gasto_MXN'].sum()
+    utilidad_operativa = ingresos - costos
 
+    col1, col2, col3 = st.columns(3)
+    col1.metric("✅ Leads exitosos acumulados", f"{total_exitosos:,}")
+    col2.metric("💰 Ingresos acumulados", f"${ingresos:,.0f} MXN")
+    col3.metric("📉 Costos acumulados", f"${costos:,.0f} MXN")
+
+    st.metric("📈 Utilidad operativa acumulada", f"${utilidad_operativa:,.0f} MXN")
+
+    # Agrupación diaria
     leads_diarios = df_mes.groupby(['Fecha', 'lead_status'])['Leads_Obtenidos'].sum().reset_index()
 
     fig = px.line(
@@ -113,7 +124,7 @@ def mostrar_modulo_leads_diarios(df):
         labels={'Leads_Obtenidos': 'Total de Leads', 'lead_status': 'Estatus del Lead'}
     )
     st.plotly_chart(fig)
-
+    
 # -------------------------
 # MÓDULO 2: CPA y ROI por Canal + Producto
 # -------------------------
